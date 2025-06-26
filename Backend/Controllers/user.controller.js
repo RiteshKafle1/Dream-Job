@@ -78,3 +78,31 @@ export const loginUser = async (req, res, next) => {
     return next({ statusCode: 500, message: "Failed to login." });
   }
 };
+export const updateProfile = async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await userModel.findById(userId).select("-password");
+
+    if (!user)
+      return next({ statusCode: 400, message: "Account doesnot exists." });
+
+    const { email, username, phone, bio, skills } = req.body;
+
+    (user.email = email || user.email),
+      (user.username = username || user.username),
+      (user.phone = phone || userId.phone),
+      (user.profile.bio = bio || user.profile.bio),
+      (user.profile.skills =
+        skills.map((value) => user.profile.skills.push(value)) ||
+        user.profile.skills);
+
+    await user.save();
+    return res
+      .status(200)
+      .json({ error: false, message: "Updation success", user });
+  } catch (error) {
+    console.log("Error in updating profile", error);
+    return next({ statusCode: 500, message: "Failed to update profile." });
+  }
+};
